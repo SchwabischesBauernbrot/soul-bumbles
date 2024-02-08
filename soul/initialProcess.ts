@@ -7,7 +7,7 @@ const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
   const { setNextProcess } = useProcessManager()
 
   const { stream, nextStep } = await initialStep.next(
-    externalDialog("Talk to the user trying to gain trust and learn about their inner world."),
+    externalDialog("Bumbles wants to know everything about the person she's talking to."),
     { stream: true, model: "quality" }
   );
   speak(stream);
