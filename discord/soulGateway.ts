@@ -6,6 +6,8 @@ export class SoulGateway {
   private soul
   private client
 
+  private lastMessage: any
+
   constructor(client: Client) {
     this.client = client
     this.soul = new Soul({
@@ -25,6 +27,7 @@ export class SoulGateway {
   start() {
     this.soul.on("newSoulEvent", this.onSoulEvent)
     this.soul.on('says', this.onChats)
+    this.soul.on('reacts', this.handleEmojiReaction.bind(this))
    
     this.soul.connect()
 
@@ -37,12 +40,19 @@ export class SoulGateway {
     return this.soul.disconnect() // this handles listener cleanup
   }
 
+  async handleEmojiReaction(evt: ActionEvent) {
+    console.log("reacts!", evt)
+    this.lastMessage.react(await evt.content())
+  }
+
   handleMessage(discordMessage: Message) {
     // Ignore messages from bots
     if (discordMessage.author.bot) return;
 
     // bot experimentation channel:
     if (discordMessage.channelId !== process.env.CHANNEL_ID) return;
+
+    this.lastMessage = discordMessage
 
     this.soul.dispatch({
       action: "chatted",

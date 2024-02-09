@@ -1,9 +1,8 @@
-import { externalDialog, mentalQuery } from "socialagi";
-import { MentalProcess, useActions, useProcessManager, useRag } from "soul-engine";
+import { MentalProcess, useActions, useRag } from "soul-engine";
 
 const updateRag: MentalProcess = async ({ step: initialStep }) => {
   const { log } = useActions()
-  const { withRagContext  } = useRag("soul-engine-docs")
+  const { withRagContext } = useRag()
 
   log("updating rag")
   return withRagContext(initialStep)

@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "Node16",
   },
-  "include": ["src/**/*", "tests/**/*", "scripts/**/*", "soul/**/*"],
+  "include": ["src/**/*", "tests/**/*", "scripts/**/*", "soul/**/*", "discord/**/*"],
   "exclude": ["node_modules"]
 }
