@@ -6,7 +6,8 @@ import { defaultEmotion } from "./subprocesses/emotionalSystem.js";
 const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
   const { speak, log, dispatch } = useActions()
   const { setNextProcess } = useProcessManager()
-  const { invokingPerception } = usePerceptions()
+  const { invokingPerception, pendingPerceptions } = usePerceptions()
+
   const discordMessage = invokingPerception?._metadata?.discordMessage as any
   const userName = discordMessage?.username || "Anonymous"
   const userModel = useSoulMemory(userName, "")
@@ -18,6 +19,9 @@ const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
   dispatch({
     action: "reacts",
     content: emojis[0],
+    _metadata: {
+      helloWorld: true,
+    }
   })
 
   let step = userModel.current ? 
@@ -33,7 +37,14 @@ const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
     externalDialog(`Bumble feels ${bumblesEmotions.current.emotion}. She wants to engage with everyone and understand them better.`),
     { stream: true, model: "quality" }
   );
-  speak(stream);
+  dispatch({
+    action: "says",
+    content: stream,
+    _metadata: {
+      helloWorld: "works!",
+    }
+  })
+  // speak(stream);
 
   let lastStep = initialStep.withMemory((await nextStep).memories.slice(-1))
 

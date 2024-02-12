@@ -25,7 +25,7 @@ const conversationNotes = (existing: string) => () => ({
 
 const summarizesConversation: MentalProcess = async ({ step: initialStep }) => {
   const conversationModel = useProcessMemory(html`
-    Sinky met a new user for the first time. They are just getting to know each other and Sinky is trying to learn as much as they can about the user.
+    ${initialStep.entityName} met a new user for the first time. They are just getting to know each other and ${initialStep.entityName} is trying to learn as much as they can about the user.
   `)
   const { log } = useActions()
 
