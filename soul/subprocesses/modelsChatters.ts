@@ -46,6 +46,9 @@ const modelsChatters: MentalProcess = async ({ step: initialStep }) => {
 
   for (const message of unprocessedMessages) {
     const discordMessage = message.metadata?.discordMessage as any
+    if (!discordMessage) {
+      continue
+    }
     const userName = discordMessage.username
     if (!userName) {
       continue
