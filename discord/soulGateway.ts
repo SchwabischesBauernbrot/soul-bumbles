@@ -17,8 +17,9 @@ export class SoulGateway {
       soulId: process.env.SOUL_ID,
       local: true,
       debug: true,
-      environment: {
-        playerName: "unknown",
+      environment:{
+        characterName: "Bumbles",
+        thingsBumblesLoves: "Tea",
       }
     })
 

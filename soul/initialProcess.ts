@@ -1,13 +1,14 @@
 import { ChatMessageRoleEnum, brainstorm, externalDialog, mentalQuery } from "socialagi";
-import { MentalProcess, useActions, usePerceptions, useProcessManager, useSoulMemory } from "soul-engine";
+import { MentalProcess, useActions, usePerceptions, useSoulMemory } from "soul-engine";
 // import shouts from "./mentalProcesses/shouts.js";
 import { defaultEmotion } from "./subprocesses/emotionalSystem.js";
 
 const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
   const { log, dispatch } = useActions()
-  const { setNextProcess } = useProcessManager()
   const { invokingPerception, pendingPerceptions } = usePerceptions()
   log("pendingPerceptions", pendingPerceptions.current)
+
+  log("env: ", soul.env)
 
   if (pendingPerceptions.current.length > 0) {
     log("I'm busy right now.")

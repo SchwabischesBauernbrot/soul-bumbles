@@ -1,0 +1,4 @@
+{
+  characterName: "Bumbles",
+  thingsBumblesLoves: "Tea",
+}
