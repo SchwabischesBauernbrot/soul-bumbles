@@ -28,7 +28,6 @@ const summarizesConversation: MentalProcess = async ({ step: initialStep }) => {
     ${initialStep.entityName} met a new user for the first time. They are just getting to know each other and ${initialStep.entityName} is trying to learn as much as they can about the user.
   `)
   const { log } = useActions()
-  const didAddMemory = useProcessMemory(false)
 
   let step = initialStep
   let finalStep = initialStep
@@ -47,32 +46,12 @@ const summarizesConversation: MentalProcess = async ({ step: initialStep }) => {
     `
 
     conversationModel.current = updatedNotes as string
-    if (!didAddMemory.current) {
-      didAddMemory.current = true
-      return finalStep.withUpdatedMemory(async (memories) => {
-        const newMemories = [...memories.flat()]
-
-        return [
-          newMemories[0],
-          newMemories[1],
-          {
-            role: ChatMessageRoleEnum.Assistant,
-            content: notes,
-            metadata: {
-              conversationSummary: true
-            }
-          },
-          ...newMemories.slice(-4)
-        ]
-      })
-    }
 
     return finalStep.withUpdatedMemory(async (memories) => {
       const existingSummary = memories.find((m) => m.metadata?.conversationSummary)
       existingSummary!.content = notes
       return memories
     })
-
   }
 
   return finalStep
