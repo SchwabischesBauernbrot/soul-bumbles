@@ -15,7 +15,7 @@ export class SoulGateway {
       blueprint: "bumbles",
       token: process.env.SOUL_ENGINE_API_KEY,
       soulId: process.env.SOUL_ID,
-      local: true,
+      // local: true,
       debug: true,
       environment:{
         characterName: "Bumbles",
