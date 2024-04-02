@@ -1,11 +1,11 @@
-import { MentalProcess, useActions, useRag } from "soul-engine";
+import { MentalProcess, useActions, useRag } from "@opensouls/engine";
 
-const updateRag: MentalProcess = async ({ step: initialStep }) => {
+const updateRag: MentalProcess = async ({ workingMemory }) => {
   const { log } = useActions()
   const { withRagContext } = useRag()
 
   log("updating rag")
-  return withRagContext(initialStep)
+  return withRagContext(workingMemory)
 }
 
 export default updateRag

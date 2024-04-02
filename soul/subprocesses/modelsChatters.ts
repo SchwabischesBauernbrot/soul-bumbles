@@ -1,50 +1,25 @@
 
-import { html } from "common-tags";
-import { ChatMessageRoleEnum, CortexStep, internalMonologue, mentalQuery } from "socialagi";
-import { MentalProcess, useActions, useProcessMemory, useSoulMemory } from "soul-engine";
+import { ChatMessageRoleEnum, MentalProcess, useActions, useProcessMemory, useSoulMemory } from "@opensouls/engine";
+import mentalQuery from "../cognitiveSteps/mentalQuery.js";
+import internalMonologue from "../cognitiveSteps/internalMonologue.js";
+import userNotes from "../cognitiveSteps/userNotes.js";
 
-const userNotes = (userName: string) => () => ({
-  command: ({ entityName }: CortexStep) => {
-    return html`      
-      ## Description
-      Write an updated and clear set of notes on ${userName} that ${entityName} would want to remember.
-
-      ## Rules
-      * Keep descriptions as bullet points
-      * Keep relevant bullet points from before
-      * Use abbreviated language to keep the notes short
-      * Analyze the interlocutor's emotions.
-      * Do not write any notes about ${entityName}
-
-      Please reply with the updated notes on ${userName}:'
-  `},
-  process: (_step: CortexStep<any>, response: string) => {
-    return {
-      value: response,
-      memories: [{
-        role: ChatMessageRoleEnum.Assistant,
-        content: response
-      }],
-    }
-  }
-})
-
-const modelsChatters: MentalProcess = async ({ step: initialStep }) => {
+const modelsChatters: MentalProcess = async ({ workingMemory }) => {
   const { log } = useActions()
   const lastProcessed = useProcessMemory("")
 
-  let unprocessedMessages = initialStep.memories.filter((m) => m.role === ChatMessageRoleEnum.User)
+  let unprocessedMessages = workingMemory.filter((m) => m.role === ChatMessageRoleEnum.User)
 
   if (lastProcessed.current) {
-    const idx = unprocessedMessages.findIndex((m) => (m.metadata?.discordMessage as any)?.id === lastProcessed.current)
+    const idx = unprocessedMessages.memories.findIndex((m) => (m.metadata?.discordMessage as any)?.id === lastProcessed.current)
     if (idx > 0) {
       unprocessedMessages = unprocessedMessages.slice(idx + 1)
     }
   }
 
-  log("unprocessedMessages count", unprocessedMessages.length)
+  log("unprocessedMessages count", unprocessedMessages.memories.length)
 
-  for (const message of unprocessedMessages) {
+  for (const message of unprocessedMessages.memories) {
     const discordMessage = message.metadata?.discordMessage as any
     if (!discordMessage) {
       continue
@@ -54,21 +29,34 @@ const modelsChatters: MentalProcess = async ({ step: initialStep }) => {
       continue
     }
     const userModel = useSoulMemory(userName, "")
-    let step = initialStep
+    let memory = workingMemory
 
-    const modelQuery = await step.compute(mentalQuery(`${step.entityName} has learned something new and they need to update the mental model of ${userName}.`));
+    const [, modelQuery] = await mentalQuery(
+      memory,
+      `${memory.soulName} has learned something new and they need to update the mental model of ${userName}.`
+    )
+
+    // const modelQuery = await memory.compute(mentalQuery(`${memory.entityName} has learned something new and they need to update the mental model of ${userName}.`));
     log("Update model?", userName, modelQuery)
     if (modelQuery) {
-      step = await step.next(internalMonologue("What has bumbles learned specifically about their chat companion from the last few messages?", "noted"))
-      log("Learnings:", step.value)
-      userModel.current = await step.compute(userNotes(userName))
+      let userLearnings;
+      [memory, userLearnings] = await internalMonologue(
+        memory,
+        {
+          instructions: `What has bumbles learned specifically about their chat companion from the last few messages?`,
+          verb: "noted",
+        }
+      )
+      log("Learnings:", userLearnings)
+      const [, notes] = await userNotes(memory, userName)
+      userModel.current = notes
     }
   }
 
-  lastProcessed.current = (unprocessedMessages.slice(-1)[0]?.metadata?.discordMessage as any).id || ""
+  lastProcessed.current = (unprocessedMessages.slice(-1).memories[0]?.metadata?.discordMessage as any).id || ""
 
   // no memories on the users for now
-  return initialStep
+  return workingMemory
 }
 
 export default modelsChatters

@@ -1,5 +1,5 @@
 import { Client, Events, Message } from "discord.js";
-import { ActionEvent, Soul, SoulEvent } from "soul-engine/soul";
+import { ActionEvent, Soul, SoulEvent } from "@opensouls/engine";
 
 
 export class SoulGateway {

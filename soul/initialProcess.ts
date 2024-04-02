@@ -1,9 +1,9 @@
-import { ChatMessageRoleEnum, brainstorm, externalDialog, mentalQuery } from "socialagi";
-import { MentalProcess, useActions, usePerceptions, useSoulMemory } from "soul-engine";
-// import shouts from "./mentalProcesses/shouts.js";
+import { ChatMessageRoleEnum, MentalProcess, useActions, usePerceptions, useSoulMemory } from "@opensouls/engine";
 import { defaultEmotion } from "./subprocesses/emotionalSystem.js";
+import brainstorm from "./cognitiveSteps/brainstorm.js";
+import externalDialog from "./cognitiveSteps/externalDialog.js";
 
-const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
+const gainsTrustWithTheUser: MentalProcess = async ({ workingMemory }) => {
   const { log, dispatch } = useActions()
   const { invokingPerception, pendingPerceptions } = usePerceptions()
   log("pendingPerceptions", pendingPerceptions.current)
@@ -12,7 +12,7 @@ const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
 
   if (pendingPerceptions.current.length > 0) {
     log("I'm busy right now.")
-    return initialStep
+    return workingMemory
   }
 
   const discordMessage = invokingPerception?._metadata?.discordMessage as any
@@ -23,7 +23,9 @@ const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
   const bumblesEmotions = useSoulMemory("emotionalState", defaultEmotion)
 
   // if (Math.random() > 0.5) {
-    const emojis = await initialStep.compute(brainstorm("What emoji should Bumbles use to react to the last message"))
+
+  const [, emojis] = await brainstorm(workingMemory, "What emoji should Bumbles use to react to the last message")
+
     dispatch({
       action: "reacts",
       content: emojis[0],
@@ -33,19 +35,20 @@ const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
     })
   // }
 
-  let step = userModel.current ?
-    initialStep.withMemory([{
+  let memory = userModel.current ?
+    workingMemory.withMemory({
       role: ChatMessageRoleEnum.Assistant,
       content: `Bumbles remembers this about ${userName}:\n${userModel.current}`
-    }]) :
-    initialStep
+    }) :
+    workingMemory
 
   log(`Bumbles remembers this about ${userName}:\n${userModel.current}`)
 
-  const { stream, nextStep } = await step.next(
-    externalDialog(`Bumble feels ${bumblesEmotions.current.emotion}. She wants to engage with everyone and understand them better.`),
-    { stream: true, model: "quality" }
-  );
+  const [withExternalDialog, stream] = await externalDialog(
+    memory,
+    `Bumble feels ${bumblesEmotions.current.emotion}. She wants to engage with everyone and understand them better.`,
+    { model: "quality", stream: true }
+  )
   
   dispatch({
     action: "says",
@@ -55,10 +58,9 @@ const gainsTrustWithTheUser: MentalProcess = async ({ step: initialStep }) => {
     }
   })
   // speak(stream);
+  await withExternalDialog.finished
 
-  let lastStep = initialStep.withMemory((await nextStep).memories.slice(-1))
-
-  return lastStep
+  return workingMemory.concat(withExternalDialog.slice(-1))
 }
 
 export default gainsTrustWithTheUser
